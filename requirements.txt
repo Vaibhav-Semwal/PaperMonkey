@@ -1,0 +1,11 @@
+python-dotenv
+redis 
+requests
+Crawl4AI
+Django
+django-crispy-forms
+django-money 
+faiss-cpu
+hugggingface_hub
+langchain
+numpy

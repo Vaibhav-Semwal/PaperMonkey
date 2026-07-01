@@ -1,0 +1,87 @@
+{% extends "base.html" %}
+{% load crispy_forms_tags %}
+
+{% block content %}
+	<div class="row">
+		<div class="col-12 col-md-8 mx-auto mt-5">
+			<h1>Create Paper</h1>
+			{% if form.errors %}
+				{% for field in form %}
+					{% for error in field.errors %}
+						<div class="alert alert-danger">
+							<strong>{{ error|escape }}</strong>
+						</div>
+					{% endfor %}
+				{% endfor %}
+				{% for error in form.non_field_errors %}
+					<div class="alert alert-danger">
+						<strong>{{ error|escape }}</strong>
+					</div>
+				{% endfor %}
+			{% endif %}
+
+			<form method="post">
+				{% csrf_token %}
+				{{ form|crispy }}
+
+				<small class="text-muted p-10">Enter Total number of questions for each section </small>
+				<div id="fields-container" class="d-flex flex-wrap gap-3 align-items-end mb-3"></div>
+
+				<button class="btn btn-primary" type="submit">Create Questions</button>
+			</form>
+
+			<div class="pt-3">
+				<small class="text-muted"><a href="{% url 'dashboard' %}" class="ml-2">Go Back </a></small>
+			</div>
+		</div>
+	</div>
+
+	<script>
+		const countInput = document.getElementById("id_count");
+		const container = document.getElementById("fields-container");
+
+		function buildFields() {
+			let n = parseInt(countInput.value, 10);
+			if (isNaN(n)) n = 0;
+			n = Math.max(0, Math.min(n, 5));
+
+			container.innerHTML = "";
+			for (let i = 1; i <= n; i++) {
+				const box = document.createElement("div");
+				// each field as its own little column, kept narrow so they sit on one line
+				box.innerHTML = 
+				`<div class="form-label"> Section ${i} </div>` +
+				`<label for="id_value_${i}" class="form-label">Questions </label>` +
+				`<input type="number" name="value" id="id_value_${i}" value="5" class="form-control" style="width: 90px;" required>` +
+				`<label for="marks_value_${i}" class="form-label"> Marks </label>` +
+				`<input type="number" name="marks_value" id="id_value_${i}" value="5" class="form-control" style="width: 90px;" required>`;
+				container.appendChild(box);
+			}
+		}
+
+		countInput.addEventListener("input", buildFields);
+		window.addEventListener("DOMContentLoaded", buildFields);
+	</script>
+
+	<style>
+		.fields-row {
+			display: flex;
+			flex-wrap: wrap;       /* drops to next line if it overflows on small screens */
+			gap: 12px;
+			margin: 12px 0;
+		}
+		.field-box {
+			display: flex;
+			flex-direction: column;  /* label sits above its input */
+			align-items: flex-start;
+		}
+		.field-box label {
+			font-size: 0.8rem;
+			margin-bottom: 2px;
+		}
+		.field-box input {
+			width: 70px;
+		}
+	</style>
+
+{% endblock content %}

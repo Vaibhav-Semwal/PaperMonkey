@@ -1,0 +1,61 @@
+{% extends 'base.html' %}
+
+{% block content %}
+	{% if messages %}
+		<div class="row mt-3">
+			{% for message in messages %}
+				{% if message.tags == 'error' %}
+					<div class="col-md-10 col-12 mx-auto alert alert-danger">
+						{{ message }}
+					</div>
+				{% else %}
+					<div class="col-md-10 col-12 mx-auto alert alert-success">
+						{{ message }}
+					</div>
+				{% endif %}
+			{% endfor %}
+		</div>
+	{% endif %}
+	<div class="row">
+		<div class="col-md-10 col-12 mx-auto mt-5">
+			
+			{% if is_teacher %}
+				<div class="d-flex justify-content-start">
+					<a href="{% url 'additem' %}" class="btn btn-primary">Create New </a>
+				</div>
+			{% endif %}
+
+			<table class="table table-hover table-striped">
+				<thead>
+					<tr>
+						<th scope="col">Name</th>
+						<th scope="col">Creator Name</th>
+						<th scope="col">No of Questions</th>
+						{% if is_teacher %}<th scope="col">Actions</th>{% endif %}
+					</tr>
+				</thead>
+				<tbody>
+					{% if items|length == 0 %}
+					<tr>
+						<th scope="row">-</th>
+						<td>-</td>
+						<td>-</td>
+						<td></td>
+					</tr>
+					{% endif %}
+
+					{% for item in items %}
+					<tr>
+						<th scope="row">{{ item.paper_name }}</th>
+						<td>{{ item.creator_name }}</td>
+						<td>{{ item.questions.count }}</td>
+						{% if is_teacher %}
+						<td><a href="{% url 'edit_paper' pk=item.pk %}" class="btn btn-sm btn-outline-primary">Edit</a></td>
+						{% endif %}
+					</tr>
+					{% endfor %}
+				</tbody>
+			</table>
+		</div>
+	</div>
+{% endblock content %}
