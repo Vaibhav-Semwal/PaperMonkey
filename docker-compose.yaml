@@ -1,37 +1,55 @@
-# docker-compose.yml
-version: "3.9"
-
 services:
-  web:
-    build: .
-    command: python manage.py runserver 0.0.0.0:8000
+  django:
+    build: ./backend-django
+    container_name: django-admin
+    command: sh -c "python manage.py migrate && python manage.py runserver 0.0.0.0:8000"
     volumes:
-      - .:/app
+      - ./backend-django:/app
+    ports:
+      - "8001:8000"
+    environment:
+      - DJANGO_SECRET_KEY=dev-secret-key-change-me
+      - DJANGO_DEBUG=True
+
+  qwen:
+    image: ollama/ollama
+    container_name: qwen-ollama
+    ports:
+      - "11434:11434"
+    volumes:
+      - D:/docker-data/ollama:/root/.ollama
+
+  api:
+    build: ./backend-fastapi
+    container_name: fastapi-api
+    command: uvicorn main:app --host 0.0.0.0 --port 8000 --reload
+    volumes:
+      - ./backend-fastapi:/app
+      - ./backend-django:/backend-django
     ports:
       - "8000:8000"
-    env_file:
-      - .env
-    depends_on:
-      - redis
-      - db
-
-  redis:
-    image: redis:7-alpine
-    ports:
-      - "6379:6379"
-    volumes:
-      - redis_data:/data
-    command: redis-server --appendonly yes
-
-  db:
-    image: postgres:16-alpine
     environment:
-      POSTGRES_DB: ${POSTGRES_DB}
-      POSTGRES_USER: ${POSTGRES_USER}
-      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      - FIREBASE_SERVICE_ACCOUNT_JSON=/app/serviceAccountKey.json
+      - QWEN_API_BASE_URL=http://qwen:11434/v1
+      - QWEN_MODEL_NAME=qwen2.5:0.5b
+      - LANGCHAIN_TRACING_V2=${LANGCHAIN_TRACING_V2:-false}
+      - LANGCHAIN_API_KEY=${LANGCHAIN_API_KEY:-}
+      - LANGCHAIN_PROJECT=${LANGCHAIN_PROJECT:-paper-generation}
+    depends_on:
+      - django
+      - qwen
+
+  frontend:
+    build: ./frontend
+    container_name: react-frontend
+    command: npm run dev -- --host 0.0.0.0
     volumes:
-      - pg_data:/var/lib/postgresql/data
+      - ./frontend:/app
+      - /app/node_modules
+    ports:
+      - "5173:5173"
+    depends_on:
+      - api
 
 volumes:
-  redis_data:
-  pg_data:
+  ollama_data:

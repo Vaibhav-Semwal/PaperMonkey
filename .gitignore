@@ -1,9 +1,11 @@
-# Python bytecode
+# Python
 __pycache__/
-*.py[cod]
-
-# Environment variables and secrets
+*.pyc
+venv/
+db.sqlite3
+serviceAccountKey.json
 .env
 
-# SQLite databases
-*.sqlite3
+# Node
+node_modules/
+dist/
