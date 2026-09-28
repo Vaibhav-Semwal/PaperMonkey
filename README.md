@@ -2,16 +2,13 @@
 
 - **Frontend:** React (Vite)
 - **Auth:** Firebase Authentication (email/password) — login, logout, change password
-- **API layer:** FastAPI — the frontend talks only to FastAPI
+- **Backend:** FastAPI — the frontend talks only to FastAPI
 - **Data/roles:** Django — owns the database (via Django ORM) and the Django Admin UI
-  for managing which users are "teacher" vs "student". FastAPI imports Django's
-  models directly (see `backend-fastapi/django_setup.py`), so you don't run two
-  separate databases.
+  for managing which users are "teacher" vs "student".
 
 ```
 project/
-  backend-django/     Django project: DB models + admin UI (role management)
-  backend-fastapi/     FastAPI app the React frontend calls
+  backend/             Django project: DB models + admin UI (role management) + FastAPI app the React frontend calls
   frontend/            React app (Vite)
 ```
 
