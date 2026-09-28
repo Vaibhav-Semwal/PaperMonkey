@@ -1,9 +1,9 @@
 from fastapi import APIRouter, Depends, HTTPException
 
 from auth import get_current_firebase_user
-from users.models import Profile
+from database.models import Profile
 
-from db import profiles as profiles_db
+from database import profiles as profiles_db
 from schemas.account import RegisterPayload
 
 router = APIRouter(tags=["account"])

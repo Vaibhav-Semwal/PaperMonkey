@@ -1,9 +1,9 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { fetchDashboard, listPapers } from "../api";
+import { fetchDashboard, listPapers} from "../api";
 import DashboardShell from "../components/DashboardShell";
 
-export default function TeacherDashboard() {
+export default function Dashboard() {
   const [data, setData] = useState(null);
   const [papers, setPapers] = useState([]);
   const [error, setError] = useState("");
@@ -12,6 +12,7 @@ export default function TeacherDashboard() {
   useEffect(() => {
     fetchDashboard().then(setData).catch((e) => setError(e.message));
     listPapers().then(setPapers).catch(() => {});
+
   }, []);
 
   return (
@@ -20,9 +21,14 @@ export default function TeacherDashboard() {
       {data && (
         <>
           <h2>{data.message}</h2>
-          <button type="button" onClick={() => navigate("/teacher/create-paper")}>
-            + Create Paper
-          </button>
+          <div style={{display: "flex", gap:"8px"}}>
+            <button type="button" onClick={() => navigate("/create-paper")}>
+              Create Paper Template
+            </button>
+            <button type="button" onClick={() => navigate("/search-paper")}>
+              Search Other Templates
+            </button>
+          </div>
 
           <h3 className="section-heading">My Papers</h3>
           {papers.length === 0 && <p className="muted">No papers yet.</p>}
@@ -33,7 +39,7 @@ export default function TeacherDashboard() {
                   <strong>{p.paper_name}</strong>
                   <span className={`status-badge status-${p.status}`}>{p.status}</span>
                 </div>
-                <button className="link" onClick={() => navigate(`/teacher/edit-paper/${p.id}`)}>
+                <button className="link" onClick={() => navigate(`/edit-paper/${p.id}`)}>
                   Edit
                 </button>
               </li>

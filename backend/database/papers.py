@@ -1,8 +1,7 @@
-import django_setup  # noqa: F401  (must run before importing Django models)
-
 from asgiref.sync import sync_to_async
 
-from users.models import Profile, Paper, QuestionBank
+from database.models import Paper, QuestionBank
+from django.db.models import Q
 
 
 @sync_to_async
@@ -17,21 +16,23 @@ def create_draft_paper(profile, payload):
     )
 
 @sync_to_async
-def list_papers(profile):
-    if profile.role == Profile.Role.STUDENT:
-        return list(
-            Paper.objects.all()
-            .select_related("teacher")
-            .order_by("-created_at")
-            .values("id", "paper_name", "teacher__display_name", "status", "created_at")[:100]
-        )
-    else: 
-        return list(
-            Paper.objects.filter(teacher=profile)
-            .order_by("-created_at")
-            .values("id", "paper_name", "status", "created_at")
-        )
+def list_self_papers(profile):
+    return list(
+        Paper.objects.filter(teacher=profile)
+        .order_by("-created_at")
+        .values("id", "paper_name", "status", "created_at")
+    )
 
+
+@sync_to_async
+def list_all_papers(query, limit):
+    qs = Paper.objects.select_related("teacher").order_by("-created_at")
+    if query:
+        qs = qs.filter( Q(paper_name__icontains = query)| Q(teacher__display_name__icontains = query))
+    return list(
+        qs.values("id", "paper_name", "status", "created_at", "teacher__display_name", "status", "created_at")[:limit]
+    )
+    
 
 @sync_to_async
 def get_paper_owned(paper_id: int, profile):

@@ -1,15 +1,4 @@
 services:
-  django:
-    build: ./backend-django
-    container_name: django-admin
-    command: sh -c "python manage.py migrate && python manage.py runserver 0.0.0.0:8000"
-    volumes:
-      - ./backend-django:/app
-    ports:
-      - "8001:8000"
-    environment:
-      - DJANGO_SECRET_KEY=dev-secret-key-change-me
-      - DJANGO_DEBUG=True
 
   qwen:
     image: ollama/ollama
@@ -17,18 +6,25 @@ services:
     ports:
       - "11434:11434"
     volumes:
-      - D:/docker-data/ollama:/root/.ollama
-
-  api:
-    build: ./backend-fastapi
-    container_name: fastapi-api
-    command: uvicorn main:app --host 0.0.0.0 --port 8000 --reload
+      - D:/docker-data/ollama:/root/.ollama  
+  
+  backend:
+    build: ./backend
+    container_name: backend
+    command: >
+      sh -c "python manage.py migrate &&
+             (python manage.py runserver 0.0.0.0:8001 &) &&
+             exec uvicorn main:app --host 0.0.0.0 --port 8000 --reload"
     volumes:
-      - ./backend-fastapi:/app
-      - ./backend-django:/backend-django
+      - ./backend:/app
     ports:
-      - "8000:8000"
+      - "8000:8000"   # FastAPI
+      - "8001:8001"   # Django admin
     environment:
+      - DJANGO_SETTINGS_MODULE=core.settings
+      - PYTHONPATH=/app
+      - DJANGO_SECRET_KEY=dev-secret-key-change-me
+      - DJANGO_DEBUG=True
       - FIREBASE_SERVICE_ACCOUNT_JSON=/app/serviceAccountKey.json
       - QWEN_API_BASE_URL=http://qwen:11434/v1
       - QWEN_MODEL_NAME=qwen2.5:0.5b
@@ -36,7 +32,6 @@ services:
       - LANGCHAIN_API_KEY=${LANGCHAIN_API_KEY:-}
       - LANGCHAIN_PROJECT=${LANGCHAIN_PROJECT:-paper-generation}
     depends_on:
-      - django
       - qwen
 
   frontend:
@@ -49,7 +44,7 @@ services:
     ports:
       - "5173:5173"
     depends_on:
-      - api
+      - backend
 
 volumes:
   ollama_data:

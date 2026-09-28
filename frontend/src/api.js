@@ -49,6 +49,10 @@ export function listPapers() {
   return authedFetch("/api/papers");
 }
 
+export function searchOtherPapers(query) {
+  return authedFetch(`/api/papers/search?q=${encodeURIComponent(query)}&limit=20`)
+}
+
 export function fetchPaper(paperId) {
   return authedFetch(`/api/papers/${paperId}`);
 }

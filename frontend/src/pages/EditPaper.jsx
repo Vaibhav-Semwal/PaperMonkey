@@ -179,7 +179,7 @@ export default function EditPaper() {
       )}
 
       <p className="switch">
-        <button className="link" onClick={() => navigate("/teacher")}>
+        <button className="link" onClick={() => navigate("/dashboard")}>
           Back to dashboard
         </button>
       </p>

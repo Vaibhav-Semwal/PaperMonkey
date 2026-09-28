@@ -12,7 +12,7 @@ from langgraph.graph import StateGraph, END
 from langchain_openai import ChatOpenAI
 from asgiref.sync import sync_to_async
 
-from users.models import Paper, QuestionBank, PaperQuestion, Profile
+from database.models import Paper, QuestionBank, PaperQuestion, Profile
 from llm.ingestion import fetch_link_text, chunk_text
 from llm.retrieval import top_passages_for_topic
 from llm.llm_client import _parse_questions_json  # reuse the JSON-array parser

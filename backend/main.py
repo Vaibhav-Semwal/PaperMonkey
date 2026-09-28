@@ -1,11 +1,14 @@
-import django_setup  # noqa: F401  (must run before importing Django models)
+import os
+import django
+
+os.environ.setdefault("DJANGO_SETTINGS_MODULE", "core.settings")
+django.setup()
 
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
-
 from routers import accounts, papers
 
-app = FastAPI(title="Teacher/Student Dashboard API")
+app = FastAPI(title="Paper-Maker Dashboard API")
 
 app.add_middleware(
     CORSMiddleware,

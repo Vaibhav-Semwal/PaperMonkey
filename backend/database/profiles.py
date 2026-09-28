@@ -1,7 +1,5 @@
-import django_setup  # noqa: F401  (must run before importing Django models)
-
 from asgiref.sync import sync_to_async
-from users.models import Profile
+from database.models import Profile
 
 
 @sync_to_async

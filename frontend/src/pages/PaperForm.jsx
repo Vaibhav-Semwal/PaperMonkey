@@ -81,7 +81,7 @@ export default function PaperForm() {
     try {
       await createPaperDraft(payload);
       setSuccess("Paper saved as draft.");
-      setTimeout(() => navigate("/teacher"), 900);
+      setTimeout(() => navigate("/dashboard"), 900);
     } catch (err) {
       setError(err.message || "Could not save paper");
     } finally {
@@ -113,8 +113,8 @@ export default function PaperForm() {
               )}
             </div>
           ))}
-          <button type="button" className="link" onClick={() => addListItem(topics, setTopics)}>
-            + Add topic
+          <button type="button" onClick={() => addListItem(topics, setTopics)}>
+            Add topic
           </button>
         </fieldset>
 
@@ -139,20 +139,20 @@ export default function PaperForm() {
               )}
             </div>
           ))}
-          <button type="button" className="link" onClick={() => addListItem(externalLinks, setExternalLinks)}>
-            + Add link
+          <button type="button" onClick={() => addListItem(externalLinks, setExternalLinks)}>
+            Add link
           </button>
         </fieldset>
 
         <label>
           Number of Sections
-          <select value={numSections} onChange={handleNumSectionsChange}>
-            {[1, 2, 3, 4, 5].map((n) => (
-              <option key={n} value={n}>
-                {n}
-              </option>
-            ))}
-          </select>
+          <input
+              type="number"
+              min={1}
+              max={5}
+              value={numSections}
+              onChange={handleNumSectionsChange}
+            />
         </label>
 
         <fieldset>
@@ -188,9 +188,12 @@ export default function PaperForm() {
         {error && <p className="error">{error}</p>}
         {success && <p className="success">{success}</p>}
 
-        <button type="submit" disabled={busy}>
-          {busy ? "Saving..." : "Save as Draft"}
-        </button>
+        <div style={{"display":"flex", "gap":"8px"}}>
+          <button onClick={() => navigate("/dashboard")}>Go Back</button>
+          <button type="submit" disabled={busy}>
+            {busy ? "Saving..." : "Save as Draft"}
+          </button>
+        </div>
       </form>
     </DashboardShell>
   );

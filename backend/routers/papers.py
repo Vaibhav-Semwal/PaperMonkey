@@ -1,10 +1,10 @@
 from fastapi import APIRouter, BackgroundTasks, Depends, HTTPException
 
 from auth import get_current_firebase_user
-from users.models import Profile, Paper
+from database.models import Profile, Paper
 from llm.graph import run_generation_pipeline
 
-from db import profiles as profiles_db, papers as papers_db
+from database import profiles as profiles_db, papers as papers_db
 from schemas.papers import PaperCreate, QuestionEdit
 
 router = APIRouter(prefix="/api/papers", tags=["papers"])
@@ -15,8 +15,6 @@ async def create_paper(payload: PaperCreate, user=Depends(get_current_firebase_u
     profile = await profiles_db.get_profile(user["uid"])
     if profile is None:
         raise HTTPException(status_code=404, detail="No profile yet. Call /api/register first.")
-    if profile.role != Profile.Role.TEACHER:
-        raise HTTPException(status_code=403, detail="Only teachers can create papers")
     paper = await papers_db.create_draft_paper(profile, payload)
     return {
         "id": paper.id, "paper_name": paper.paper_name, "topics": paper.topics,
@@ -28,10 +26,14 @@ async def create_paper(payload: PaperCreate, user=Depends(get_current_firebase_u
 @router.get("")
 async def list_papers(user=Depends(get_current_firebase_user)):
     profile = await profiles_db.get_profile(user["uid"])
-    if profile is None:
-        raise HTTPException(status_code=403, detail="Teachers only")
-    papers = await papers_db.list_papers(profile)
+    papers = await papers_db.list_self_papers(profile)
     return [{**p, "created_at": p["created_at"].isoformat()} for p in papers]
+
+
+@router.get("/search")
+async def search_papers(query: str = "", limit: int = 20):
+    results = await papers_db.list_all_papers(query, limit)
+    return results
 
 
 @router.get("/{paper_id}")
@@ -48,8 +50,6 @@ async def get_paper(paper_id: int, user=Depends(get_current_firebase_user)):
 @router.post("/{paper_id}/generate-questions")
 async def generate_questions(paper_id: int, background_tasks: BackgroundTasks, user=Depends(get_current_firebase_user)):
     profile = await profiles_db.get_profile(user["uid"])
-    if profile is None or profile.role != Profile.Role.TEACHER:
-        raise HTTPException(status_code=403, detail="Teachers only")
     paper = await papers_db.get_paper_owned(paper_id, profile)
     if paper is None:
         raise HTTPException(status_code=404, detail="Paper not found")

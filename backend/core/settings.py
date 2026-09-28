@@ -1,11 +1,3 @@
-"""
-Django settings.
-
-Django's job in this project is ONLY to own the database schema (via its ORM)
-and give you the Django Admin UI to manage Teacher/Student roles.
-It does not serve the API to the frontend — FastAPI does that (see
-backend-fastapi/main.py), but FastAPI re-uses these Django models directly.
-"""
 import os
 from pathlib import Path
 
@@ -23,7 +15,7 @@ INSTALLED_APPS = [
     "django.contrib.sessions",
     "django.contrib.messages",
     "django.contrib.staticfiles",
-    "users",
+    "database",
 ]
 
 MIDDLEWARE = [

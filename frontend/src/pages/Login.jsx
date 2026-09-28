@@ -28,12 +28,12 @@ export default function Login() {
         await createUserWithEmailAndPassword(auth, email, password);
         const profile = await registerProfile(role, displayName);
         setProfile(profile);
-        navigate(profile.role === "teacher" ? "/teacher" : "/student");
+        navigate("/dashboard");
       } else {
         await signInWithEmailAndPassword(auth, email, password);
         const profile = await fetchMe();
         setProfile(profile);
-        navigate(profile.role === "teacher" ? "/teacher" : "/student");
+        navigate("/dashboard");
       }
     } catch (err) {
       setError(err.message || "Something went wrong");
