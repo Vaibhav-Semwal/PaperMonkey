@@ -13,6 +13,7 @@ export default function EditPaper() {
   const [error, setError] = useState("");
   const [busy, setBusy] = useState(false);
   const [drafts, setDrafts] = useState({}); // { [question_id]: { question_text, answer_text } }
+  const [show, setShow] = useState(false);
   const pollRef = useRef(null);
 
   const load = useCallback(async () => {
@@ -35,6 +36,12 @@ export default function EditPaper() {
     load();
     return () => clearInterval(pollRef.current);
   }, [load]);
+
+  useEffect(() => {
+    const f = () => setShow(scrollY > 300);
+    addEventListener("scroll", f);
+    return () => removeEventListener("scroll", f);
+  }, []);
 
   useEffect(() => {
     if (paper?.status === "generating") {
@@ -139,6 +146,29 @@ export default function EditPaper() {
     <DashboardShell title={`Edit Paper: ${paper.paper_name}`}>
       {error && <p className="error">{error}</p>}
 
+      {paper.status === "ready" && (
+        <div style={{display: "flex", justifyContent: "center", gap:"8px"}}>
+          <button onClick={handleSaveAll} disabled={busy || !dirty.length}>
+            {dirty.length ? `Save All Changes (${dirty.length})` : "All changes saved"}
+          </button>
+          <button onClick={handlePublish} disabled={busy || dirty.length > 0}>
+            Publish Paper
+          </button>
+          <button onClick={() => handleExportPDF(false)} disabled={busy}>
+            Export
+          </button>
+          <button onClick={() => handleExportPDF(true)} disabled={busy}>
+            Export with Answers
+          </button>
+        </div>
+      )}
+
+      <p className="switch">
+        <button className="link" onClick={() => navigate("/dashboard")}>
+          Back to dashboard
+        </button>
+      </p>
+
       <p>
         Status: <span className={`status-badge status-${paper.status}`}>{paper.status}</span>
       </p>
@@ -200,31 +230,16 @@ export default function EditPaper() {
               </fieldset>
             );
           })}
-
-          {paper.status === "ready" && (
-            <div style={{display: "flex", justifyContent: "center", gap:"8px"}}>
-              <button onClick={handleSaveAll} disabled={busy || !dirty.length}>
-                {dirty.length ? `Save All Changes (${dirty.length})` : "All changes saved"}
-              </button>
-              <button onClick={handlePublish} disabled={busy || dirty.length > 0}>
-                Publish Paper
-              </button>
-              <button onClick={() => handleExportPDF(false)} disabled={busy}>
-                Export
-              </button>
-              <button onClick={() => handleExportPDF(true)} disabled={busy}>
-                Export with Answers
-              </button>
-            </div>
-          )}
         </>
       )}
-
-      <p className="switch">
-        <button className="link" onClick={() => navigate("/dashboard")}>
+      <div style={{display: "flex", justifyContent: "center", gap:"8px"}}>
+        <button aria-label="Back to top" onClick={() => scrollTo({ top: 0, behavior: "smooth" })}>
+          Go back to top
+        </button>
+        <button onClick={() => navigate("/dashboard")}>
           Back to dashboard
         </button>
-      </p>
+      </div>
     </DashboardShell>
   );
 }

@@ -22,13 +22,9 @@ export default function PaperSearch() {
     <DashboardShell title="Teacher Dashboard">
         <div className="search-box">
             <button onClick={() => navigate("/dashboard")}>← Back</button>
-            <input
-                type="text"
-                value={query}
+            <input type="text" value={query} placeholder="Search papers..." className="search-bar"
                 onChange={(e) => setQuery(e.target.value)}
                 onKeyDown={(e) => e.key === "Enter" && runSearch(query)}
-                placeholder="Search papers..."
-                className="search-bar"
             />
             <button onClick={() => runSearch(query)} disabled={loading}>
                 {loading ? "Searching..." : "Search"}
@@ -46,7 +42,7 @@ export default function PaperSearch() {
                     <div>Created: {new Date(p.created_at).toLocaleString()}</div>
                 </div>
                 <strong>{p.teacher_display_name}</strong>
-                <button className="link" onClick={() => navigate(`/edit-paper/${p.id}`)}>
+                <button onClick={() => navigate(`/edit-paper/${p.id}`)}>
                     Edit
                 </button>
             </li>

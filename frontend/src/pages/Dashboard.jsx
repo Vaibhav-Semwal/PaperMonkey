@@ -39,7 +39,7 @@ export default function Dashboard() {
                   <strong>{p.paper_name}</strong>
                   <span className={`status-badge status-${p.status}`}>{p.status}</span>
                 </div>
-                <button className="link" onClick={() => navigate(`/edit-paper/${p.id}`)}>
+                <button onClick={() => navigate(`/edit-paper/${p.id}`)}>
                   Edit
                 </button>
               </li>
