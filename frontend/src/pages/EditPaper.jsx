@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { fetchPaper, generateQuestions, updateQuestion, publishPaper } from "../api";
+import { jsPDF } from "jspdf";
 import DashboardShell from "../components/DashboardShell";
 
 const POLL_INTERVAL_MS = 3000;
@@ -24,6 +25,11 @@ export default function EditPaper() {
       return null;
     }
   }, [id]);
+
+  const dirty = Object.values(paper?.questions_by_section ?? {})
+    .flat()
+    .filter((query) => Object.entries(drafts[query.question_id] ?? {}).some(([k, v]) => v !== query[k]
+  ));
 
   useEffect(() => {
     load();
@@ -66,17 +72,21 @@ export default function EditPaper() {
     }));
   }
 
-  async function handleSaveQuestion(q) {
-    const payload = {
-      question_text: fieldValue(q, "question_text"),
-      answer_text: fieldValue(q, "answer_text"),
-    };
-    try {
-      await updateQuestion(id, q.question_id, payload);
-      await load();
-    } catch (e) {
-      setError(e.message);
-    }
+  async function handleSaveAll() {
+    setError("");
+    setBusy(true);
+    const results = await Promise.allSettled(
+      dirty.map((q) =>
+        updateQuestion(id, q.question_id, {
+          question_text: fieldValue(q, "question_text"),
+          answer_text: fieldValue(q, "answer_text"),
+        })
+      )
+    );
+    const failed = results.filter((r) => r.status === "rejected").length;
+    if (failed) setError(`${failed} question(s) failed to save. Your edits are kept, so try again.`);
+    await load();
+    setBusy(false);
   }
 
   async function handlePublish() {
@@ -89,6 +99,32 @@ export default function EditPaper() {
     } finally {
       setBusy(false);
     }
+  }
+
+  function handleExportPDF(isAnswerSheet = false) {
+    const doc = new jsPDF();
+    let y = 20;
+    const write = (text, size = 11, bold = false) => {
+      doc.setFont("helvetica", bold ? "bold" : "normal").setFontSize(size);
+      doc.splitTextToSize(text, 180).forEach((line) => {
+        if (y > 280) { doc.addPage(); y = 20; }
+        doc.text(line, 15, y);
+        y += size * 0.5;
+      });
+      y += 3;
+    };
+
+    write(paper.paper_name, 16, true);
+    paper.sections.forEach(({ section, marks_per_question }) => {
+      write(`Section ${section} (${marks_per_question} marks each)`, 13, true);
+      (paper.questions_by_section[section] || []).forEach((q, i) => {
+        write(`${i + 1}. ${fieldValue(q, "question_text")} [${q.marks} Marks]`); 
+        if (isAnswerSheet) { write(`Answer: ${fieldValue(q, "answer_text")}`); }
+      });
+    });
+
+    if (isAnswerSheet) { doc.save(`${paper.paper_name}_Answers.pdf`); }
+    else { doc.save(`${paper.paper_name}.pdf`); }
   }
 
   if (!paper) {
@@ -132,7 +168,7 @@ export default function EditPaper() {
             const letter = sectionDef.section;
             const questions = paper.questions_by_section[letter] || [];
             return (
-              <fieldset key={letter} className="section-block">
+              <fieldset key={letter} className="section-question-block">
                 <legend>
                   Section {letter} ({sectionDef.num_questions} questions,{" "}
                   {sectionDef.marks_per_question} marks each)
@@ -159,11 +195,6 @@ export default function EditPaper() {
                       />
                     </label>
                     <span className="muted">Marks: {q.marks}</span>
-                    {paper.status === "ready" && (
-                      <button type="button" className="link" onClick={() => handleSaveQuestion(q)}>
-                        Save
-                      </button>
-                    )}
                   </div>
                 ))}
               </fieldset>
@@ -171,9 +202,20 @@ export default function EditPaper() {
           })}
 
           {paper.status === "ready" && (
-            <button type="button" onClick={handlePublish} disabled={busy}>
-              {busy ? "Publishing..." : "Publish Paper"}
-            </button>
+            <div style={{display: "flex", justifyContent: "center", gap:"8px"}}>
+              <button onClick={handleSaveAll} disabled={busy || !dirty.length}>
+                {dirty.length ? `Save All Changes (${dirty.length})` : "All changes saved"}
+              </button>
+              <button onClick={handlePublish} disabled={busy || dirty.length > 0}>
+                Publish Paper
+              </button>
+              <button onClick={() => handleExportPDF(false)} disabled={busy}>
+                Export
+              </button>
+              <button onClick={() => handleExportPDF(true)} disabled={busy}>
+                Export with Answers
+              </button>
+            </div>
           )}
         </>
       )}
